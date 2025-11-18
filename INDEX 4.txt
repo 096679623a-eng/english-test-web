@@ -1,0 +1,97 @@
+<!doctype html>
+if(q.type==='fill'){
+const s = String(a).toLowerCase();
+if(q.answers.some(x=>s===String(x).toLowerCase())) score++;
+}
+});
+document.getElementById('score').innerText = score;
+const pct = Math.round((score/questions.length)*100);
+document.getElementById('prog').style.width = pct + '%';
+}
+
+
+// initial render
+renderQuestion(current);
+
+
+// keyboard shortcuts: Enter = submit
+window.addEventListener('keydown', (e)=>{
+if(e.key==='Enter'){
+e.preventDefault(); checkAnswer(current);
+}
+if(e.key==='ArrowRight'){
+if(current<questions.length-1){current++;renderQuestion(current)}
+}
+if(e.key==='ArrowLeft'){
+if(current>0){current--;renderQuestion(current)}
+}
+});
+// --- 以下加入你提供的簡易英文單字測驗區塊（整合於頁面底部） ---
+
+
+const simpleQuiz = [
+{word:'apple',correct:'蘋果',options:['蘋果','香蕉','葡萄','梨']},
+{word:'teacher',correct:'老師',options:['老師','醫生','學生','工人']},
+{word:'book',correct:'書',options:['書','桌子','鞋子','門']},
+{word:'water',correct:'水',options:['水','火','土','風']},
+{word:'dog',correct:'狗',options:['狗','貓','鳥','魚']},
+{word:'city',correct:'城市',options:['城市','村莊','房子','山']},
+{word:'music',correct:'音樂',options:['音樂','電影','照片','衣服']},
+{word:'computer',correct:'電腦',options:['電腦','手機','椅子','書桌']},
+{word:'coffee',correct:'咖啡',options:['咖啡','茶','水','牛奶']},
+{word:'train',correct:'火車',options:['火車','公車','計程車','腳踏車']}
+];
+
+
+let si = 0, sscore = 0;
+
+
+function escapeForAttr(s){ return String(s).replace(/'/g, "\\'"); }
+
+
+function loadSimpleQ() {
+const q = simpleQuiz[si];
+document.getElementById("sq-question").innerText = "單字：" + q.word;
+document.getElementById("sq-options").innerHTML =
+q.options.map(op=>`<button onclick="checkSimpleA('${escapeForAttr(op)}')">${op}</button>`).join("");
+}
+
+
+function checkSimpleA(ans) {
+const q = simpleQuiz[si];
+const result = document.getElementById("sq-result");
+if (ans === q.correct) {
+sscore++;
+result.innerText = "答對！";
+} else {
+result.innerText = `答錯，正確：${q.correct}`;
+}
+document.getElementById("sq-score").innerText = sscore;
+si++;
+if (si < simpleQuiz.length) loadSimpleQ();
+else {
+document.getElementById("sq-question").innerText = "測驗結束！";
+document.getElementById("sq-options").innerHTML = "";
+}
+}
+
+
+// 在主教材載入後載入此區塊
+window.addEventListener('DOMContentLoaded', ()=>{
+const simpleArea = document.createElement('section');
+simpleArea.style.marginTop = '40px';
+simpleArea.innerHTML = `
+<div class="card" style="margin-top:20px;">
+<h2>附加練習：簡易英文單字測驗</h2>
+<p id="sq-question"></p>
+<div id="sq-options"></div>
+<p id="sq-result"></p>
+<p>得分：<span id="sq-score">0</span></p>
+</div>
+`;
+document.querySelector('.wrap').appendChild(simpleArea);
+loadSimpleQ();
+});
+</script>
+</body>
+</html>
