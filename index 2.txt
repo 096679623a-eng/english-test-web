@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TOEIC 800 — 商業 & 日常對話 練習</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--accent:#1f6feb;--good:#1e7e34;--bad:#c9302c}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans TC',sans-serif}
+    body{margin:0;background:var(--bg);color:#111;padding:28px}
+    .wrap{max-width:920px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    header h1{font-size:20px;margin:0}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+    .question-image{width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+    .qmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .question{font-size:18px;margin:0 0 12px}
+    .options{display:flex;flex-direction:column;gap:8px}
+    .option{background:#f1f5f9;border-radius:8px;padding:10px;cursor:pointer;border:1px solid transparent}
+    .option:hover{transform:translateY(-1px)}
+    .option.selected{outline:2px solid rgba(31,111,235,0.12);border-color:rgba(31,111,235,0.18);background:#eef4ff}
+    .controls{display:flex;gap:8px;margin-top:14px}
+    button{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+    button.secondary{background:#fff;color:var(--accent);border:1px solid rgba(31,111,235,0.12)}
+    .feedback{margin-top:12px;padding:10px;border-radius:8px}
+    .correct{background:rgba(30,126,52,0.08);border:1px solid rgba(30,126,52,0.12);color:var(--good)}
+    .incorrect{background:rgba(201,48,44,0.06);border:1px solid rgba(201,48,44,0.08);color:var(--bad)}
+    .scorebar{margin-top:14px;display:flex;justify-content:space-between;align-items:center}
+    .progress{height:10px;background:#e6eefc;border-radius:999px;flex:1;margin-left:12px}
+    .progress > i{display:block;height:100%;background:var(--accent);border-radius:999px;width:0%}
+    input.blank{padding:8px;width:60%;border-radius:8px;border:1px solid #d1d7e6}
+    small.hint{display:block;margin-top:6px;color:#556}
+    footer{margin-top:18px;text-align:right}
+    @media (max-width:640px){.question{font-size:16px}.wrap{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="https://via.placeholder.com/56?text=TOEIC" alt="logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover">
+      <div>
+        <h1>TOEIC 800 練習：商業對話與日常訊息（含圖片）</h1>
+        <div style="font-size:13px;color:#556">題型：單字填空、選擇題 • 共 6 題 • 即時回饋與計分</div>
+      </div>
+    </header>
+
+    <main class="card" id="app">
+      <!-- 動態插入題目 -->
+    </main>
+
+    <footer>
+      <small style="color:#556">可匯出此檔案為 HTML，直接在瀏覽器開啟即可練習。</small>
+    </footer>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        id:1,type:'mcq',topic:'商業對話',
+        image:'https://via.placeholder.com/900x300?text=Business+Meeting',
+        prompt:'A: "Can you send the revised contract by Friday?"\nB: "___, I will make sure you receive it by end of day."',
+        options:["Absolutely","Sorry","Maybe","Not yet"],
+        answer:0
+      },
+      {
+        id:2,type:'fill',topic:'商業訊息',
+        image:'https://via.placeholder.com/900x300?text=Email+Notification',
+        prompt:'Please fill the missing word: "We need to ___ the shipment before it leaves port."',
+        answers:['inspect','check','verify'],
+        hint:'verb, 意思為「檢查、核對」'
+      },
+      {
+        id:3,type:'mcq',topic:'日常對話',
+        image:'https://via.placeholder.com/900x300?text=Cafe',
+        prompt:'When the barista asks: "Would you like that iced or hot?" you should answer with...',
+        options:["Iced, please.","No, thanks.","How much is it?","Maybe later."],
+        answer:0
+      },
+      {
+        id:4,type:'fill',topic:'日常訊息',
+        image:'https://via.placeholder.com/900x300?text=Train+Platform',
+        prompt:'Fill in: "The next train to Taipei departs at 18:45 from platform ___."',
+        answers:['3','three'],
+        hint:'可輸入數字或英文單字'
+      },
+      {
+        id:5,type:'mcq',topic:'商業對話',
+        image:'https://via.placeholder.com/900x300?text=Presentation',
+        prompt:'During a presentation the speaker says: "If there are no further questions, I will ___ the floor to our CEO."',
+        options:["hand","give","take","leave"],
+        answer:1
+      },
+      {
+        id:6,type:'fill',topic:'商業訊息',
+        image:'https://via.placeholder.com/900x300?text=Invoice',
+        prompt:'Fill: "Please find the attached invoice for your ___ and payment."',
+        answers:['review','reference'],
+        hint:'常見商務片語 (two possible answers)'
+      }
+    ];
+
+    let current = 0;
+    const state = {answers: Array(questions.length).fill(null)};
+
+    const app = document.getElementById('app');
+
+    function renderQuestion(i){
+      const q = questions[i];
+      app.innerHTML = '';
+
+      const img = document.createElement('img');
+      img.className = 'question-image';
+      img.src = q.image;
+      img.alt = q.topic + ' image';
+      app.appendChild(img);
+
+      const meta = document.createElement('div'); meta.className='qmeta';
+      meta.innerHTML = `<div style=\"font-weight:600\">題目 ${i+1} / ${questions.length}</div><div style=\"font-size:13px;color:#556\">${q.topic}</div>`;
+      app.appendChild(meta);
+
+      const qtext = document.createElement('p'); qtext.className='question'; qtext.innerText = q.prompt;
+      app.appendChild(qtext);
+
+      const container = document.createElement('div'); container.className='options';
+
+      if(q.type==='mcq'){
+        q.options.forEach((opt, idx)=>{
+          const button = document.createElement('button');
+          button.className='option';
+          button.type='button';
+          button.innerText = opt;
+          button.addEventListener('click', ()=>{
+            // select visual
+            document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+            button.classList.add('selected');
+            state.answers[i]=idx;
+          });
+          container.appendChild(button);
+        });
+      } else if(q.type==='fill'){
+        const input = document.createElement('input');
+        input.className='blank'; input.type='text'; input.placeholder='輸入答案後按 Submit';
+        input.addEventListener('input', ()=>{ state.answers[i]=input.value.trim(); });
+        container.appendChild(input);
+        if(q.hint) container.appendChild(Object.assign(document.createElement('small'),{className:'hint',innerText:q.hint}));
+      }
+
+      app.appendChild(container);
+
+      const controls = document.createElement('div'); controls.className='controls';
+      const prev = document.createElement('button'); prev.className='secondary'; prev.innerText='上一題'; prev.disabled = i===0;
+      prev.addEventListener('click', ()=>{ if(i>0){ current--;renderQuestion(current);} });
+      const next = document.createElement('button'); next.className='secondary'; next.innerText='下一題'; next.disabled = i===questions.length-1;
+      next.addEventListener('click', ()=>{ if(i<questions.length-1){ current++;renderQuestion(current);} });
+      const submit = document.createElement('button'); submit.innerText='Submit/檢查答案';
+      submit.addEventListener('click', ()=> checkAnswer(i));
+
+      controls.appendChild(prev); controls.appendChild(next); controls.appendChild(submit);
+      app.appendChild(controls);
+
+      const fb = document.createElement('div'); fb.id='feedback'; app.appendChild(fb);
+
+      const scorebar = document.createElement('div'); scorebar.className='scorebar';
+      scorebar.innerHTML = `<div>得分：<strong id=score>0</strong> / ${questions.length}</div><div class=progress aria-hidden><i id=prog></i></div>`;
+      app.appendChild(scorebar);
+
+      updateScoreDisplay();
+    }
+
+    function checkAnswer(i){
+      const q = questions[i];
+      const fb = document.getElementById('feedback'); fb.innerHTML='';
+      let correct=false;
+      const user = state.answers[i];
+      if(q.type==='mcq'){
+        if(user===null){ fb.innerHTML = '<div class="feedback incorrect">請先選擇一個選項。</div>'; return; }
+        correct = (user===q.answer);
+        if(correct) fb.innerHTML = '<div class="feedback correct">正確！</div>';
+        else fb.innerHTML = `<div class="feedback incorrect">錯誤。正確答案：${q.options[q.answer]}</div>`;
+      } else if(q.type==='fill'){
+        if(!user){ fb.innerHTML = '<div class="feedback incorrect">請輸入答案再按 Submit。</div>'; return; }
+        const cleaned = user.toLowerCase();
+        correct = q.answers.some(a=>cleaned===String(a).toLowerCase());
+        if(correct) fb.innerHTML = '<div class="feedback correct">正確！</div>';
+        else fb.innerHTML = `<div class="feedback incorrect">錯誤。可能的正確答案：${q.answers.join(', ')}</div>`;
+      }
+
+      // lock in answer by adding a small mark
+      if(correct) state.answers[i] = state.answers[i]; // keep
+      // show overall score
+      updateScoreDisplay();
+    }
+
+    function updateScoreDisplay(){
+      let score=0;
+      questions.forEach((q, idx)=>{
+        const a = state.answers[idx];
+        if(a===null) return;
+        if(q.type==='mcq' && a===q.answer) score++;
+        if(q.type==='fill'){
+          const s = String(a).toLowerCase();
+          if(q.answers.some(x=>s===String(x).toLowerCase())) score++;
+        }
+      });
+      document.getElementById('score').innerText = score;
+      const pct = Math.round((score/questions.length)*100);
+      document.getElementById('prog').style.width = pct + '%';
+    }
+
+    // initial render
+    renderQuestion(current);
+
+    // keyboard shortcuts: Enter = submit
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){
+        e.preventDefault(); checkAnswer(current);
+      }
+      if(e.key==='ArrowRight'){
+        if(current<questions.length-1){current++;renderQuestion(current)}
+      }
+      if(e.key==='ArrowLeft'){
+        if(current>0){current--;renderQuestion(current)}
+      }
+    });
+  </script>
+</body>
+</html>
